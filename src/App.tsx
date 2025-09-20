@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
-import html2canvas from "html2canvas";
 import { getCroppedImg } from "./utils/cropImage.js";
 
 // Import the template images directly
@@ -15,6 +14,69 @@ interface ImageData {
   zoom: number;
   croppedAreaPixels: any;
 }
+
+const createHighQualityPoster = (
+  croppedImageSrc: string,
+  templateSrc: string,
+  aspectRatio: number
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const posterCanvas = document.createElement("canvas");
+    const ctx = posterCanvas.getContext("2d");
+
+    const croppedImage = new Image();
+    const templateImage = new Image();
+
+    // Use a fixed high resolution for the final poster
+    if (aspectRatio === 3 / 4) {
+      posterCanvas.width = 1200;
+      posterCanvas.height = 1600;
+    } else {
+      posterCanvas.width = 1600;
+      posterCanvas.height = 1200;
+    }
+
+    let imagesLoaded = 0;
+    const totalImages = 2;
+
+    const onImageLoad = () => {
+      imagesLoaded++;
+      if (imagesLoaded === totalImages) {
+        if (!ctx) {
+          reject("Canvas context not available");
+          return;
+        }
+        // Draw the cropped image first
+        ctx.drawImage(
+          croppedImage,
+          0,
+          0,
+          posterCanvas.width,
+          posterCanvas.height
+        );
+
+        // Draw the template image on top
+        ctx.drawImage(
+          templateImage,
+          0,
+          0,
+          posterCanvas.width,
+          posterCanvas.height
+        );
+
+        resolve(posterCanvas.toDataURL("image/png", 1.0));
+      }
+    };
+
+    croppedImage.onload = onImageLoad;
+    croppedImage.onerror = reject;
+    croppedImage.src = croppedImageSrc;
+
+    templateImage.onload = onImageLoad;
+    templateImage.onerror = reject;
+    templateImage.src = templateSrc;
+  });
+};
 
 function App() {
   const [images, setImages] = useState<ImageData[]>([]);
@@ -114,21 +176,18 @@ function App() {
 
     for (let i = 0; i < completedImages.length; i++) {
       const image = completedImages[i];
-      const element = document.getElementById(`poster-${image.id}`);
-      if (element) {
-        const canvas = await html2canvas(element, {
-          useCORS: true,
-          scale: 2,
-          logging: false,
-        });
-        const link = document.createElement("a");
-        link.download = `poster-${i + 1}.png`;
-        link.href = canvas.toDataURL("image/png", 1.0);
-        link.click();
+      const dataUrl = await createHighQualityPoster(
+        image.croppedImage!,
+        template,
+        aspectRatio
+      );
 
-        // Add small delay between downloads
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
+      const link = document.createElement("a");
+      link.download = `poster-${i + 1}.png`;
+      link.href = dataUrl;
+      link.click();
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
     setIsProcessing(false);
@@ -138,18 +197,16 @@ function App() {
     const image = images.find((img) => img.id === imageId);
     if (!image || !image.croppedImage) return;
 
-    const element = document.getElementById(`poster-${imageId}`);
-    if (element) {
-      const canvas = await html2canvas(element, {
-        useCORS: true,
-        scale: 2,
-        logging: false,
-      });
-      const link = document.createElement("a");
-      link.download = `poster-${imageId}.png`;
-      link.href = canvas.toDataURL("image/png", 1.0);
-      link.click();
-    }
+    const dataUrl = await createHighQualityPoster(
+      image.croppedImage,
+      template,
+      aspectRatio
+    );
+
+    const link = document.createElement("a");
+    link.download = `poster-${imageId}.png`;
+    link.href = dataUrl;
+    link.click();
   };
 
   const removeImage = (imageId: string) => {
@@ -329,8 +386,8 @@ function App() {
                   .filter((img) => img.croppedImage)
                   .map((image) => (
                     <div key={image.id} className="relative">
+                      {/* The on-screen preview remains the same, but the download logic has changed */}
                       <div
-                        id={`poster-${image.id}`}
                         className="relative w-full max-w-md mx-auto"
                         style={{ aspectRatio: `${aspectRatio}` }}
                       >
