@@ -6,7 +6,6 @@ import { getCroppedImg } from "./utils/cropImage.js";
 // Import the template images directly
 import template4 from "./assets/template4.png";
 import template3 from "./assets/template3.png";
-import bgImage from "./assets/BG.png";
 
 function App() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -17,24 +16,24 @@ function App() {
   const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
   const [template, setTemplate] = useState<string>(template4); // Use the imported variable
 
-  const backgroundStyle = {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100vh",
-    backgroundImage: `url(${bgImage})`,
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat",
-    zIndex: -1,
-  } as const;
-
   const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          setImageSrc(reader.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
@@ -71,17 +70,16 @@ function App() {
   };
 
   return (
-    <div className="relative">
-      <div style={backgroundStyle}></div>
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
         <div
-          className="backdrop-blur-md bg-white/30 shadow-lg rounded-2xl p-6 w-full max-w-lg border border-white/30"
+          className="backdrop-blur-md bg-gray-800/80 shadow-2xl rounded-2xl p-6 w-full max-w-lg border border-gray-600/50"
           style={{
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
           }}
         >
-          <h1 className="text-2xl font-bold text-center mb-4 text-white">
+          <h1 className="text-2xl font-bold text-center mb-4 text-gray-100">
             Sweet of madeena
           </h1>
 
@@ -95,7 +93,7 @@ function App() {
               className={`px-4 py-2 rounded-lg transition-all duration-300 ${
                 aspectRatio === 4 / 3
                   ? "bg-green-500 text-white border-green-500"
-                  : "backdrop-blur-md bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                  : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
               }`}
             >
               4:3 Ratio
@@ -108,7 +106,7 @@ function App() {
               className={`px-4 py-2 rounded-lg transition-all duration-300 ${
                 aspectRatio === 3 / 4
                   ? "bg-green-500 text-white border-green-500"
-                  : "backdrop-blur-md bg-white/20 text-white hover:bg-white/30 border border-white/30"
+                  : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
               }`}
             >
               3:4 Ratio
@@ -116,26 +114,46 @@ function App() {
           </div>
 
           {/* Upload and Camera */}
-          <div className="relative mb-4">
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleUpload}
-              className="hidden"
-              id="file-upload"
-            />
-            <label
-              htmlFor="file-upload"
-              className="cursor-pointer inline-block w-full text-center backdrop-blur-md bg-white/20 text-white py-2 rounded-lg hover:bg-white/30 border border-white/30 transition-all duration-300"
-            >
-              Choose Image
-            </label>
+          <div className="flex gap-2 mb-4">
+            {/* File Upload Button */}
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleUpload}
+                className="hidden"
+                id="file-upload"
+              />
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer block w-full text-center backdrop-blur-md bg-gray-700/60 text-gray-100 py-2 rounded-lg hover:bg-gray-600/70 border border-gray-500/50 transition-all duration-300"
+              >
+                Choose Image
+              </label>
+            </div>
+
+            {/* Camera Button */}
+            <div className="flex-1">
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleCameraCapture}
+                className="hidden"
+                id="camera-capture"
+              />
+              <label
+                htmlFor="camera-capture"
+                className="cursor-pointer block w-full text-center backdrop-blur-md bg-gray-700/60 text-gray-100 py-2 rounded-lg hover:bg-gray-600/70 border border-gray-500/50 transition-all duration-300"
+              >
+                Take Photo
+              </label>
+            </div>
           </div>
 
           {/* Crop Section */}
           {imageSrc && !croppedImage && (
-            <div className="relative w-full h-64 bg-gray-200">
+            <div className="relative w-full h-64 bg-gray-700 rounded-lg">
               <Cropper
                 image={imageSrc}
                 crop={crop}
@@ -151,7 +169,7 @@ function App() {
           {imageSrc && !croppedImage && (
             <button
               onClick={handleCrop}
-              className="mt-4 w-full backdrop-blur-md bg-white/20 text-white py-2 rounded-lg hover:bg-white/30 border border-white/30 transition-all duration-300"
+              className="mt-4 w-full backdrop-blur-md bg-gray-700/60 text-gray-100 py-2 rounded-lg hover:bg-gray-600/70 border border-gray-500/50 transition-all duration-300"
             >
               Crop Image
             </button>
@@ -178,7 +196,7 @@ function App() {
               </div>
               <button
                 onClick={handleDownload}
-                className="mt-4 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600"
+                className="mt-4 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-all duration-300"
               >
                 Download Poster
               </button>
