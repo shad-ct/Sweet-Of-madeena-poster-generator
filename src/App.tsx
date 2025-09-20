@@ -192,7 +192,7 @@ function App() {
                   : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
               }`}
             >
-              4:3 Ratio
+              Landscape
             </button>
             <button
               onClick={() => {
@@ -205,7 +205,7 @@ function App() {
                   : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
               }`}
             >
-              3:4 Ratio
+              Portrait
             </button>
           </div>
 
