@@ -7,29 +7,58 @@ import { getCroppedImg } from "./utils/cropImage.js";
 import template4 from "./assets/template4.png";
 import template3 from "./assets/template3.png";
 
+interface ImageData {
+  id: string;
+  src: string;
+  croppedImage: string | null;
+  crop: { x: number; y: number };
+  zoom: number;
+  croppedAreaPixels: any;
+}
+
 function App() {
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [images, setImages] = useState<ImageData[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(-1);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [aspectRatio, setAspectRatio] = useState<number>(4 / 3);
-  const [template, setTemplate] = useState<string>(template4); // Use the imported variable
+  const [template, setTemplate] = useState<string>(template4);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          setImageSrc(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files) {
+      setIsProcessing(true);
+      const newImages: ImageData[] = [];
+
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === "string") {
+            const newImage: ImageData = {
+              id: `image-${Date.now()}-${index}`,
+              src: reader.result as string,
+              croppedImage: null,
+              crop: { x: 0, y: 0 },
+              zoom: 1,
+              croppedAreaPixels: null,
+            };
+            newImages.push(newImage);
+
+            if (newImages.length === files.length) {
+              setImages((prev) => [...prev, ...newImages]);
+              setCurrentImageIndex(newImages.length > 0 ? 0 : -1);
+              setIsProcessing(false);
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      });
     }
   };
 
@@ -39,7 +68,16 @@ function App() {
       const reader = new FileReader();
       reader.onload = () => {
         if (typeof reader.result === "string") {
-          setImageSrc(reader.result);
+          const newImage: ImageData = {
+            id: `camera-${Date.now()}`,
+            src: reader.result as string,
+            croppedImage: null,
+            crop: { x: 0, y: 0 },
+            zoom: 1,
+            croppedAreaPixels: null,
+          };
+          setImages((prev) => [...prev, newImage]);
+          setCurrentImageIndex(images.length);
         }
       };
       reader.readAsDataURL(file);
@@ -47,33 +85,91 @@ function App() {
   };
 
   const handleCrop = async () => {
+    if (currentImageIndex === -1 || !images[currentImageIndex]) return;
+
     try {
-      const croppedImg = await getCroppedImg(imageSrc, croppedAreaPixels);
-      setCroppedImage(croppedImg);
+      const currentImage = images[currentImageIndex];
+      const croppedImg = await getCroppedImg(
+        currentImage.src,
+        croppedAreaPixels
+      );
+
+      setImages((prev) =>
+        prev.map((img, index) =>
+          index === currentImageIndex
+            ? { ...img, croppedImage: croppedImg, croppedAreaPixels }
+            : img
+        )
+      );
     } catch (e) {
       console.error(e);
     }
   };
 
-  const handleDownload = async () => {
-    const element = document.getElementById("final-poster");
-    if (!element) return;
-    const canvas = await html2canvas(element, {
-      useCORS: true,
-      scale: 2,
-      logging: false,
-    });
-    const link = document.createElement("a");
-    link.download = "poster.png";
-    link.href = canvas.toDataURL("image/png", 1.0);
-    link.click();
+  const handleDownloadAll = async () => {
+    const completedImages = images.filter((img) => img.croppedImage);
+    if (completedImages.length === 0) return;
+
+    setIsProcessing(true);
+
+    for (let i = 0; i < completedImages.length; i++) {
+      const image = completedImages[i];
+      const element = document.getElementById(`poster-${image.id}`);
+      if (element) {
+        const canvas = await html2canvas(element, {
+          useCORS: true,
+          scale: 2,
+          logging: false,
+        });
+        const link = document.createElement("a");
+        link.download = `poster-${i + 1}.png`;
+        link.href = canvas.toDataURL("image/png", 1.0);
+        link.click();
+
+        // Add small delay between downloads
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+
+    setIsProcessing(false);
   };
+
+  const handleDownloadSingle = async (imageId: string) => {
+    const image = images.find((img) => img.id === imageId);
+    if (!image || !image.croppedImage) return;
+
+    const element = document.getElementById(`poster-${imageId}`);
+    if (element) {
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        scale: 2,
+        logging: false,
+      });
+      const link = document.createElement("a");
+      link.download = `poster-${imageId}.png`;
+      link.href = canvas.toDataURL("image/png", 1.0);
+      link.click();
+    }
+  };
+
+  const removeImage = (imageId: string) => {
+    setImages((prev) => {
+      const filtered = prev.filter((img) => img.id !== imageId);
+      if (currentImageIndex >= filtered.length) {
+        setCurrentImageIndex(Math.max(0, filtered.length - 1));
+      }
+      return filtered;
+    });
+  };
+
+  const currentImage =
+    currentImageIndex >= 0 ? images[currentImageIndex] : null;
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
       <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
         <div
-          className="backdrop-blur-md bg-gray-800/80 shadow-2xl rounded-2xl p-6 w-full max-w-lg border border-gray-600/50"
+          className="backdrop-blur-md bg-gray-800/80 shadow-2xl rounded-2xl p-6 w-full max-w-4xl border border-gray-600/50"
           style={{
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
@@ -88,7 +184,7 @@ function App() {
             <button
               onClick={() => {
                 setAspectRatio(4 / 3);
-                setTemplate(template4); // Use the imported variable
+                setTemplate(template4);
               }}
               className={`px-4 py-2 rounded-lg transition-all duration-300 ${
                 aspectRatio === 4 / 3
@@ -101,7 +197,7 @@ function App() {
             <button
               onClick={() => {
                 setAspectRatio(3 / 4);
-                setTemplate(template3); // Use the imported variable
+                setTemplate(template3);
               }}
               className={`px-4 py-2 rounded-lg transition-all duration-300 ${
                 aspectRatio === 3 / 4
@@ -120,6 +216,7 @@ function App() {
               <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={handleUpload}
                 className="hidden"
                 id="file-upload"
@@ -128,7 +225,7 @@ function App() {
                 htmlFor="file-upload"
                 className="cursor-pointer block w-full text-center backdrop-blur-md bg-gray-700/60 text-gray-100 py-2 rounded-lg hover:bg-gray-600/70 border border-gray-500/50 transition-all duration-300"
               >
-                Choose Image
+                Choose Images
               </label>
             </div>
 
@@ -151,11 +248,60 @@ function App() {
             </div>
           </div>
 
+          {/* Processing Indicator */}
+          {isProcessing && (
+            <div className="mb-4 text-center text-gray-300">
+              Processing images...
+            </div>
+          )}
+
+          {/* Image Grid */}
+          {images.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-gray-100 mb-2">
+                Selected Images ({images.length})
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+                {images.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
+                      index === currentImageIndex
+                        ? "border-green-500"
+                        : "border-gray-600"
+                    }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  >
+                    <img
+                      src={image.src}
+                      alt={`Selected ${index + 1}`}
+                      className="w-full h-20 object-cover"
+                    />
+                    {image.croppedImage && (
+                      <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-1 rounded">
+                        ✓
+                      </div>
+                    )}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(image.id);
+                      }}
+                      className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1 rounded opacity-75 hover:opacity-100"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Crop Section */}
-          {imageSrc && !croppedImage && (
-            <div className="relative w-full h-64 bg-gray-700 rounded-lg">
+          {currentImage && !currentImage.croppedImage && (
+            <div className="relative w-full h-64 bg-gray-700 rounded-lg mb-4">
               <Cropper
-                image={imageSrc}
+                image={currentImage.src}
                 crop={crop}
                 zoom={zoom}
                 aspect={aspectRatio}
@@ -166,39 +312,59 @@ function App() {
             </div>
           )}
 
-          {imageSrc && !croppedImage && (
+          {currentImage && !currentImage.croppedImage && (
             <button
               onClick={handleCrop}
-              className="mt-4 w-full backdrop-blur-md bg-gray-700/60 text-gray-100 py-2 rounded-lg hover:bg-gray-600/70 border border-gray-500/50 transition-all duration-300"
+              className="w-full backdrop-blur-md bg-gray-700/60 text-gray-100 py-2 rounded-lg hover:bg-gray-600/70 border border-gray-500/50 transition-all duration-300 mb-4"
             >
-              Crop Image
+              Crop Current Image
             </button>
           )}
 
-          {/* Final Poster Preview */}
-          {croppedImage && (
+          {/* Final Posters Preview */}
+          {images.some((img) => img.croppedImage) && (
             <div className="mt-6">
-              <div
-                id="final-poster"
-                className="relative w-full max-w-md mx-auto"
-                style={{ aspectRatio: `${aspectRatio}` }}
-              >
-                <img
-                  src={croppedImage}
-                  alt="Cropped"
-                  className="w-full h-full object-cover"
-                />
-                <img
-                  src={template} // Use the imported variable here
-                  alt="Template Overlay"
-                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {images
+                  .filter((img) => img.croppedImage)
+                  .map((image) => (
+                    <div key={image.id} className="relative">
+                      <div
+                        id={`poster-${image.id}`}
+                        className="relative w-full max-w-md mx-auto"
+                        style={{ aspectRatio: `${aspectRatio}` }}
+                      >
+                        <img
+                          src={image.croppedImage!}
+                          alt="Cropped"
+                          className="w-full h-full object-cover"
+                        />
+                        <img
+                          src={template}
+                          alt="Template Overlay"
+                          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleDownloadSingle(image.id)}
+                        className="mt-2 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition-all duration-300 text-sm"
+                      >
+                        Download This Poster
+                      </button>
+                    </div>
+                  ))}
               </div>
+
               <button
-                onClick={handleDownload}
-                className="mt-4 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-all duration-300"
+                onClick={handleDownloadAll}
+                disabled={isProcessing}
+                className="mt-4 w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:bg-gray-600 transition-all duration-300"
               >
-                Download Poster
+                {isProcessing
+                  ? "Downloading..."
+                  : `Download All Posters (${
+                      images.filter((img) => img.croppedImage).length
+                    })`}
               </button>
             </div>
           )}
