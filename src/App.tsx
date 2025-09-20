@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import html2canvas from "html2canvas";
-import { getCroppedImg } from "./utils/cropImage";
+import { getCroppedImg } from "./utils/cropImage.js";
 
 // Import the template images directly
 import template4 from "./assets/template4.png";
 import template3 from "./assets/template3.png";
+import bgImage from "./assets/BG.png";
 
 function App() {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -22,7 +23,7 @@ function App() {
     left: 0,
     width: "100%",
     height: "100vh",
-    backgroundImage: 'url("/src/assets/image.png")',
+    backgroundImage: `url(${bgImage})`,
     backgroundSize: "cover",
     backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
@@ -128,7 +129,7 @@ function App() {
               htmlFor="file-upload"
               className="cursor-pointer inline-block w-full text-center backdrop-blur-md bg-white/20 text-white py-2 rounded-lg hover:bg-white/30 border border-white/30 transition-all duration-300"
             >
-              Choose Image or Take a Picture
+              Choose Image
             </label>
           </div>
 
@@ -167,7 +168,7 @@ function App() {
                 <img
                   src={croppedImage}
                   alt="Cropped"
-                  className="w-full h-full object-cover rounded-lg"
+                  className="w-full h-full object-cover"
                 />
                 <img
                   src={template} // Use the imported variable here
