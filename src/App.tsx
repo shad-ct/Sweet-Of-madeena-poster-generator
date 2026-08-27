@@ -223,31 +223,36 @@ function App() {
     currentImageIndex >= 0 ? images[currentImageIndex] : null;
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 relative">
+    <div className="app-shell relative flex min-h-screen flex-col">
+      <div className="app-main flex flex-1 flex-col items-center justify-center p-4 relative">
         <div
-          className="backdrop-blur-md bg-gray-800/80 shadow-2xl rounded-2xl p-6 w-full max-w-4xl border border-gray-600/50"
+          className="editor-card backdrop-blur-md bg-gray-800/80 shadow-2xl rounded-2xl p-6 w-full max-w-4xl border border-gray-600/50"
           style={{
             backdropFilter: "blur(16px)",
             WebkitBackdropFilter: "blur(16px)",
           }}
         >
-          <h1 className="text-2xl font-bold text-center mb-4 text-gray-100">
-            Sweet of madeena
-          </h1>
+          <div className="app-heading-wrap">
+            <p className="app-kicker">Poster creator</p>
+            <h1 className="app-heading text-2xl font-bold text-center mb-4 text-gray-100">
+              ISHQE MADEENA
+            </h1>
+            {/* <p className="app-subtitle">
+              Turn your favorite moments into a beautiful Madeena poster.
+            </p> */}
+          </div>
 
           {/* Ratio Selection */}
-          <div className="flex justify-center gap-4 mb-4">
+          <div className="mode-switcher flex justify-center gap-4 mb-4">
             <button
               onClick={() => {
                 setAspectRatio(4 / 3);
                 setTemplate(template4);
               }}
-              className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                aspectRatio === 4 / 3
-                  ? "bg-green-500 text-white border-green-500"
-                  : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
-              }`}
+              className={`px-4 py-2 rounded-lg transition-all duration-300 ${aspectRatio === 4 / 3
+                ? "bg-green-500 text-white border-green-500"
+                : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
+                }`}
             >
               Landscape
             </button>
@@ -256,18 +261,17 @@ function App() {
                 setAspectRatio(3 / 4);
                 setTemplate(template3);
               }}
-              className={`px-4 py-2 rounded-lg transition-all duration-300 ${
-                aspectRatio === 3 / 4
-                  ? "bg-green-500 text-white border-green-500"
-                  : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
-              }`}
+              className={`px-4 py-2 rounded-lg transition-all duration-300 ${aspectRatio === 3 / 4
+                ? "bg-green-500 text-white border-green-500"
+                : "backdrop-blur-md bg-gray-700/60 text-gray-100 hover:bg-gray-600/70 border border-gray-500/50"
+                }`}
             >
               Portrait
             </button>
           </div>
 
           {/* Upload and Camera */}
-          <div className="flex gap-2 mb-4">
+          <div className="upload-actions flex gap-2 mb-4">
             {/* File Upload Button */}
             <div className="flex-1">
               <input
@@ -322,11 +326,10 @@ function App() {
                 {images.map((image, index) => (
                   <div
                     key={image.id}
-                    className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${
-                      index === currentImageIndex
-                        ? "border-green-500"
-                        : "border-gray-600"
-                    }`}
+                    className={`relative cursor-pointer border-2 rounded-lg overflow-hidden ${index === currentImageIndex
+                      ? "border-green-500"
+                      : "border-gray-600"
+                      }`}
                     onClick={() => setCurrentImageIndex(index)}
                   >
                     <img
@@ -419,14 +422,39 @@ function App() {
               >
                 {isProcessing
                   ? "Downloading..."
-                  : `Download All Posters (${
-                      images.filter((img) => img.croppedImage).length
-                    })`}
+                  : `Download All Posters (${images.filter((img) => img.croppedImage).length
+                  })`}
               </button>
             </div>
           )}
         </div>
       </div>
+      <footer className="app-footer border-t border-gray-700/60 px-4 py-5 text-center text-sm text-gray-400">
+        <div className="footer-content">
+          <p className="footer-item">
+            <span>Contact for posters:</span>{" "}
+            <a
+              href="https://www.instagram.com/sh4id._"
+              target="_blank"
+              rel="noreferrer"
+              className="text-gray-200 underline decoration-gray-500 underline-offset-4 transition-colors hover:text-green-400"
+            >
+              Shahid Shameem
+            </a>
+          </p>
+          <p className="footer-item">
+            <span>Website:</span>{" "}
+            <a
+              href="https://www.linkedin.com/in/shad-c-t/"
+              target="_blank"
+              rel="noreferrer"
+              className="text-gray-200 underline decoration-gray-500 underline-offset-4 transition-colors hover:text-green-400"
+            >
+              Shad C T
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

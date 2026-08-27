@@ -1,1 +1,140 @@
 @import "tailwindcss";
+
+:root {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #f5f1e8;
+    background: #071a1e;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+}
+
+button,
+label {
+    font-family: inherit;
+}
+
+.app-shell {
+    background-color: #071a1e;
+    background-image:
+        linear-gradient(rgba(39, 87, 82, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(39, 87, 82, 0.12) 1px, transparent 1px),
+        radial-gradient(circle at 50% -10%, #285853 0, transparent 48%);
+    background-size: 34px 34px, 34px 34px, auto;
+}
+
+.app-main {
+    padding-top: clamp(2rem, 7vh, 5rem);
+    padding-bottom: clamp(2rem, 7vh, 5rem);
+}
+
+.editor-card {
+    max-width: 900px;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
+    border-color: rgba(111, 174, 160, 0.3);
+    border-radius: 1.25rem;
+    background: rgba(10, 38, 42, 0.9);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.app-heading-wrap {
+    margin-bottom: 1.75rem;
+    text-align: center;
+}
+
+.app-kicker {
+    margin: 0 0 0.65rem;
+    color: #e5a16f;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.app-heading {
+    margin-bottom: 0.6rem;
+    color: #fff8e9;
+    font-size: clamp(1.6rem, 4vw, 2.35rem);
+    letter-spacing: 0.12em;
+}
+
+.app-subtitle {
+    max-width: 30rem;
+    margin: 0 auto;
+    color: #a9c2bb;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.mode-switcher {
+    padding: 0.3rem;
+    border: 1px solid rgba(111, 174, 160, 0.2);
+    border-radius: 0.75rem;
+    background: rgba(4, 23, 27, 0.45);
+}
+
+.upload-actions {
+    margin-top: 1rem;
+}
+
+.app-footer {
+    border-color: rgba(111, 174, 160, 0.2);
+    background: rgba(4, 23, 27, 0.45);
+    color: #89aaa1;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.01em;
+}
+
+.app-footer a {
+    color: #f0b27c;
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    max-width: 42rem;
+    margin: 0 auto;
+}
+
+.footer-item {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.footer-item+.footer-item {
+    padding-left: 2rem;
+    border-left: 1px solid rgba(111, 174, 160, 0.25);
+}
+
+@media (max-width: 480px) {
+    .upload-actions {
+        flex-direction: column;
+    }
+
+    .mode-switcher {
+        gap: 0.5rem;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+
+    .footer-item+.footer-item {
+        padding-left: 0;
+        border-left: 0;
+    }
+}
